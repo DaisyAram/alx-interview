@@ -12,32 +12,33 @@ def validUTF8(data):
     Returns:
     bool: True if data is a valid UTF-8 encoding, else return False
     """
+    number_bytes = 0
+    mask_1 = 1 << 7
+    mask_2 = 1 << 6
 
-    i = 0
-    while i < len(data):
-        # Calculate the number of bytes required for the current character
-        byte_count = 0
-        if data[i] < 0x80:
-            byte_count = 1
-        elif data[i] < 0xC0:
-            return False
-        elif data[i] < 0xE0:
-            byte_count = 2
-        elif data[i] < 0xF0:
-            byte_count = 3
-        else:
-            return False
+    for i in data:
 
-        # Check if the required number of bytes are available
-        if i + byte_count > len(data):
-            return False
+        mask_byte = 1 << 7
 
-        # Check if the subsequent bytes are valid
-        for j in range(1, byte_count):
-            if data[i + j] < 0x80 or data[i + j] >= 0xC0:
+        if number_bytes == 0:
+
+            while mask_byte & i:
+                number_bytes += 1
+                mask_byte = mask_byte >> 1
+
+            if number_bytes == 0:
+                continue
+
+            if number_bytes == 1 or number_bytes > 4:
                 return False
 
-        # Move to the next character
-        i += byte_count
+        else:
+            if not (i & mask_1 and not (i & mask_2)):
+                return False
 
-    return True
+        number_bytes -= 1
+
+    if number_bytes == 0:
+        return True
+
+    return False
